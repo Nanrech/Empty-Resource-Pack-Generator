@@ -1,0 +1,28 @@
+1. Download version manifest into runtime/manifest.json
+1.1 Read "latest"
+1.2 Extract target version id and package url
+
+2. Download version package into runtime/package.json
+2.1 Read downloads/client
+2.2 Gather download info ("sha1", "size", "url")
+
+3. Download client jar into runtime/client.jar
+3.1 Extract client.jar into runtime/client_unzipped/
+3.2 Navigate to runtime/client_unzipped/assets/minecraft/lang/
+3.3 Extract deprecated.json
+3.4 Extract en_us.json
+
+4. Create generated/{version}/
+4.0 Generate resource pack with only en_us?
+4.1 Generate empty resource pack in "generated/{version}/Empty Language Resource Pack ({version})"
+4.2 Compress into zip file
+
+5. Cleanup
+5.1 Delete runtime/manifest.json (version manifest)
+5.2 Delete runtime/package.json (target version package)
+5.3 Delete runtime/client.jar
+5.4 Delete runtime/client_unzipped/*
+
+6. Finally time to export the resource pack
+6.1 Upload resource pack to modrinth
+6.2 Update github page to add modrinth links

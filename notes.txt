@@ -1,0 +1,152 @@
+--- VERSION MANIFEST ---
+Example:
+https://piston-meta.mojang.com/mc/game/version_manifest_v2.json
+// Note: https://piston-meta.mojang.com/mc/game/version_manifest.json returns the same file
+// but the version entries are missing the fields "sha1" and "complianceLevel"
+// Note: In both cases, you can replace "piston-meta-mojang.com" with "launchermeta.mojang.com"
+
+Wiki:
+https://minecraft.wiki/w/Version_manifest.json
+
+Contains:
+// Note: "versions" is just a huge list
+{
+  "latest": {
+    "release": "26.3",
+    "snapshot": "26.4-snapshot-8"
+  },
+  "versions": [
+    {
+      "id": "26.4-snapshot-8",
+      "type": "snapshot",
+      "url": "https://piston-meta.mojang.com/v1/packages/46f6dc6a5cefe084af0ce2ecf7f433c1222d4dd1/26.4-snapshot-8.json",
+      "time": "2026-11-10T14:28:50+00:00",
+      "releaseTime": "2026-11-10T14:20:05+00:00",
+      "sha1": "46f6dc6a5cefe084af0ce2ecf7f433c1222d4dd1",
+      "complianceLevel": 1
+    },
+    {
+      "id": "26.3",
+      "type": "release",
+      "url": "https://piston-meta.mojang.com/v1/packages/9f67e10ed013deeaad20ac3c800652765d493408/26.3.json",
+      "time": "2026-11-10T06:58:51+00:00",
+      "releaseTime": "2026-09-15T11:23:02+00:00",
+      "sha1": "9f67e10ed013deeaad20ac3c800652765d493408",
+      "complianceLevel": 1
+    }
+  ]
+}
+
+--- VERSION PACKAGES ---
+Example:
+https://piston-meta.mojang.com/v1/packages/9f67e10ed013deeaad20ac3c800652765d493408/26.3.json
+
+Contains:
+// Note: We only care about "assetIndex" and "downloads"
+{
+  "arguments": {},
+  "assetIndex": {
+    "id": "34",
+    "sha1": "e99f9973047785b5a9d52eaf72020b97545053c9",
+    "size": 597235,
+    "totalSize": 487358754,
+    "url": "https://piston-meta.mojang.com/v1/packages/e99f9973047785b5a9d52eaf72020b97545053c9/34.json"
+  },
+  "assets": "34",
+  "complianceLevel": 1,
+  "downloads": {
+    "client": {
+      "sha1": "e877b6a07acd633fb3bb475002175cec036e7b87",
+      "size": 41483720,
+      "url": "https://piston-data.mojang.com/v1/objects/e877b6a07acd633fb3bb475002175cec036e7b87/client.jar"
+    },
+    "server": {
+      "sha1": "33680f5f2ac32864d6d7cf5e56a705fdb3e05f4c",
+      "size": 62294556,
+      "url": "https://piston-data.mojang.com/v1/objects/33680f5f2ac32864d6d7cf5e56a705fdb3e05f4c/server.jar"
+    }
+  },
+  "id": "26.3",
+  "javaVersion": {...},
+  "libraries": [...],
+  "logging": {...},
+  "mainClass": "net.minecraft.client.main.Main",
+  "minimumLauncherVersion": 21,
+  "releaseTime": "2026-09-15T11:23:02+00:00",
+  "time": "2026-09-15T11:23:02+00:00",
+  "type": "release"
+}
+
+--- ASSET INDEX ---
+Example:
+https://piston-meta.mojang.com/v1/packages/e99f9973047785b5a9d52eaf72020b97545053c9/34.json
+
+Contains:
+// Note: "objects" is a giant object with an entry for every single asset in the game (lang/en_us.json not included)
+{
+  "objects": {
+    "icons/icon_128x128.png": {
+      "hash": "b62ca8ec10d07e6bf5ac8dae0c8c1d2e6a1e3356",
+      "size": 9101
+    },
+    ...
+  }
+}
+
+--- CLIENT JAR ---
+Example:
+https://piston-data.mojang.com/v1/objects/e877b6a07acd633fb3bb475002175cec036e7b87/client.jar
+
+Contains:
+// A jar file called `client.jar`
+// Note: This file can be renamed to client.zip and decompressed like a normal zip folder
+/client
+  /assets
+    /minecraft
+      /lang
+        deprecated.json      // JSON object with 2 objects, "removed": [str] and "renamed": { str: str }
+        en_us.json           // What we want
+    .mcassetsroot            // Empty file
+  /com
+  /data
+    /minecraft               // Apparently contains all the datapacks that make the game work
+  /META-INF
+  /net                       // All the code (a ton of .class files)
+  flightrecorder-config.jfc
+  pack.png
+  version.json               // (str: int) "pack_version": {"resource_major", "resource_minor", "data_major", "data_minor"}
+
+--- SERVER JAR ---
+Example:
+https://piston-data.mojang.com/v1/objects/33680f5f2ac32864d6d7cf5e56a705fdb3e05f4c/server.jar
+
+Contains:
+// A jar file called `server.jar`
+// Note: This file can be renamed to server.jar and decompressed like a normal zip folder
+/server
+  /META-INF
+    /libraries
+    /versions
+      /26.3
+        server-26.3.jar                // Another jar!
+        /decompressed                  // This folder has to be generated manually, same as the other jar files
+          /assets
+            /minecraft
+              /lang
+                deprecated.json        // Contains the exact same stuff as client/assets/minecraft/lang/deprecated.json
+                en_us.json             // Contains the exact same stuff as client/assets/minecraft/lang/en_us.json
+            .mcassetsroot
+          /com
+          /data
+            /minecraft                 // Contains the exact same stuff as client/data/minecraft
+          /META-INF
+          /net
+          flightrecorder-config.jfc
+          version.json                 // Contains the exact same stuff as client/version.json
+    classpath-joined
+    libraries.list
+    main-class
+    MANIFEST.MF
+    versions.list                      // tab separated file, contains "JAR_HASH	JAR_VERSION	JAR_PATH" (path to server-26.3.jar from /versions)
+  /net
+  version.json
