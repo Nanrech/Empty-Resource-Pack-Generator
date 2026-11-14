@@ -1,0 +1,2 @@
+# Empty Resource Pack Generator
+
