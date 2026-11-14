@@ -192,6 +192,7 @@ def cleanup_temp_dir():
   os.remove(PATH_TEMP_DIR / "manifest.json")
   os.remove(PATH_TEMP_DIR / "package.json")
   os.remove(PATH_TEMP_DIR / "version.json")
+  os.rmdir(PATH_TEMP_DIR)
 
 def cleanup_output_dir(name):
   shutil.rmtree(PATH_OUTPUT_DIR / name)
