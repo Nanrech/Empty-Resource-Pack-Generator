@@ -28,13 +28,12 @@ def create_temp_n_output_directories():
   PATH_TEMP_DIR.mkdir(exist_ok=True)
   PATH_OUTPUT_DIR.mkdir(exist_ok=True)
 
-def _download_temp_stuff(url, file):
-  r = requests.get(url, allow_redirects=True)
-  with open(file, "wb") as f:
-    f.write(r.content)
-
 def download_version_manifest():
-  _download_temp_stuff(VERSION_MANIFEST_URL, FILE_MANIFEST_JSON)
+  response = requests.get(VERSION_MANIFEST_URL, allow_redirects=True, timeout=(10, 60))
+  response.raise_for_status()
+
+  with open(FILE_MANIFEST_JSON, "wb") as f:
+    f.write(response.content)
 
 def get_latest_versions_info():
   f = open(FILE_MANIFEST_JSON, "r")
@@ -70,7 +69,11 @@ def get_latest_versions_info():
   return latest_versions_info
 
 def download_version_package(url):
-  _download_temp_stuff(url, FILE_PACKAGE_JSON)
+  response = requests.get(url, allow_redirects=True, timeout=(10, 60))
+  response.raise_for_status()
+
+  with open(FILE_PACKAGE_JSON, "wb") as f:
+    f.write(response.content)
 
 def get_client_download_info():
   f = open(FILE_PACKAGE_JSON, "r")
