@@ -119,11 +119,21 @@ def extract_client_zip():
         shutil.copyfileobj(source, destination)
 
 def get_version_pack_info():
-  f = open(FILE_CLIENT_VERSION, "r")
-  version = json.load(f)
+  f = open(FILE_CLIENT_VERSION, "r", encoding="utf-8")
+  version_json = json.load(f)
   f.close()
 
-  pack_info = version.get("pack_version")
+  if not isinstance(version_json, dict):
+    raise RuntimeError("Couldn't open version.json. File is malformed or missing.")
+
+  pack_info = version_json.get("pack_version")
+  if pack_info is None:
+    raise RuntimeError("pack_info is missing from version.json.")
+
+  if "resource_major" not in pack_info or "resource_minor" not in pack_info:
+    raise RuntimeError("pack_info is missing resource_major or resource_minor.")
+
+  # bc of the check before we can now assume these will work
   return {
     "major": pack_info["resource_major"],
     "minor": pack_info["resource_minor"],
