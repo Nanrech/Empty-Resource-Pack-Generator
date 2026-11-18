@@ -216,69 +216,70 @@ def rsp_pack_into_zip_file(path, name):
         zip_ref.write(file_path, os.path.relpath(file_path, PATH_OUTPUT_DIR / name))
 
 def _cleanup_temp_dir():
-  os.remove(PATH_TEMP_DIR / "client.zip")
-  os.remove(PATH_TEMP_DIR / "en_us.json")
-  os.remove(PATH_TEMP_DIR / "manifest.json")
-  os.remove(PATH_TEMP_DIR / "package.json")
-  os.remove(PATH_TEMP_DIR / "version.json")
-  os.rmdir(PATH_TEMP_DIR)
+  if PATH_TEMP_DIR.exists():
+    shutil.rmtree(PATH_TEMP_DIR)
 
 def _cleanup_output_dir(name):
-  shutil.rmtree(PATH_OUTPUT_DIR / name)
-
-def cleanup_temp_n_output_directories(name):
-  _cleanup_temp_dir()
-  _cleanup_output_dir(name)
+  output_path = PATH_OUTPUT_DIR / name
+  if output_path.exists():
+    shutil.rmtree(output_path)
 
 def main():
-  # Prep
-  # TODO: Command line arguments (release/snapshot, specify version, skip downloading, output as zip)
-  # TODO: Add logging
-  # TODO: Group up stuff into bigger functions of functions
-  create_temp_n_output_directories()
+  rsp_name = None
+  rsp_created = False
+  try:
+    # Prep
+    # TODO: Command line arguments (release/snapshot, specify version, skip downloading, output as zip)
+    # TODO: Add logging
+    # TODO: Group up stuff into bigger functions of functions
+    create_temp_n_output_directories()
 
-  # Download version manifest
-  download_version_manifest()
-  latest_versions_info = get_latest_versions_info()
+    # Download version manifest
+    download_version_manifest()
+    latest_versions_info = get_latest_versions_info()
 
-  target_version_info = None
-  if RELEASE_OR_SNAPSHOT:
-    target_version_info = latest_versions_info.get("release")
-  else:
-    target_version_info = latest_versions_info.get("snapshot")
+    target_version_info = None
+    if RELEASE_OR_SNAPSHOT:
+      target_version_info = latest_versions_info.get("release")
+    else:
+      target_version_info = latest_versions_info.get("snapshot")
 
-  if target_version_info is None:
-    raise RuntimeError
+    if target_version_info is None:
+      raise RuntimeError
 
-  # Download version package and get target version info
-  download_version_package(target_version_info["url"])
-  target_url, target_sha1, target_size = get_client_download_info()
-  if None in [target_url, target_sha1, target_size]:
-    raise RuntimeError("placeholder")
+    # Download version package and get target version info
+    download_version_package(target_version_info["url"])
+    target_url, target_sha1, target_size = get_client_download_info()
+    if None in [target_url, target_sha1, target_size]:
+      raise RuntimeError("placeholder")
 
-  # Download client.jar as zip and extract contents
-  download_client_jar_as_zip(target_url, target_sha1, target_size)
-  extract_client_zip()
+    # Download client.jar as zip and extract contents
+    download_client_jar_as_zip(target_url, target_sha1, target_size)
+    extract_client_zip()
 
-  # Create new resourcepack dir
-  rsp_name = FILENAME_RSP.replace("%", target_version_info["id"])
-  rsp_path = PATH_OUTPUT_DIR / rsp_name
-  rsp_mkdir_base_directory(rsp_path)
+    # Create new resourcepack dir
+    rsp_name = FILENAME_RSP.replace("%", target_version_info["id"])
+    rsp_path = PATH_OUTPUT_DIR / rsp_name
+    rsp_mkdir_base_directory(rsp_path)
+    rsp_created = True
 
-  # Create pack.mcmeta and pack.png
-  pack_info = get_version_pack_info()
-  rsp_create_pack_mcmeta(rsp_path, pack_info)
-  rsp_copy_pack_png(rsp_path)
+    # Create pack.mcmeta and pack.png
+    pack_info = get_version_pack_info()
+    rsp_create_pack_mcmeta(rsp_path, pack_info)
+    rsp_copy_pack_png(rsp_path)
 
-  # Add the languages to the resourcepack
-  lang_dir_path = rsp_create_assets_lang_dirs(rsp_path)
-  rsp_make_lang_files(lang_dir_path)
+    # Add the languages to the resourcepack
+    lang_dir_path = rsp_create_assets_lang_dirs(rsp_path)
+    rsp_make_lang_files(lang_dir_path)
 
-  # Turn the resourcepack into a zip file
-  rsp_pack_into_zip_file(rsp_path, rsp_name)
-
-  # Time to clean up this mess
-  cleanup_temp_n_output_directories(rsp_name)
+    # Turn the resourcepack into a zip file
+    rsp_pack_into_zip_file(rsp_path, rsp_name)
+  finally:
+    try:
+      if rsp_created:
+        _cleanup_output_dir(rsp_name)
+    finally:
+      _cleanup_temp_dir()
 
 if __name__ == "__main__":
   main()
