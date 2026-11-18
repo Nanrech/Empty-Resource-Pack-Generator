@@ -186,7 +186,7 @@ def rsp_pack_into_zip_file(path, name):
         file_path = os.path.join(folder_name, filename)
         zip_ref.write(file_path, os.path.relpath(file_path, PATH_OUTPUT_DIR / name))
 
-def cleanup_temp_dir():
+def _cleanup_temp_dir():
   os.remove(PATH_TEMP_DIR / "client.zip")
   os.remove(PATH_TEMP_DIR / "en_us.json")
   os.remove(PATH_TEMP_DIR / "manifest.json")
@@ -194,8 +194,12 @@ def cleanup_temp_dir():
   os.remove(PATH_TEMP_DIR / "version.json")
   os.rmdir(PATH_TEMP_DIR)
 
-def cleanup_output_dir(name):
+def _cleanup_output_dir(name):
   shutil.rmtree(PATH_OUTPUT_DIR / name)
+
+def cleanup_temp_n_output_directories(name):
+  _cleanup_temp_dir()
+  _cleanup_output_dir(name)
 
 def main():
   # Prep
@@ -243,8 +247,7 @@ def main():
   rsp_pack_into_zip_file(rsp_path, rsp_name)
 
   # Time to clean up this mess
-  cleanup_temp_dir()
-  cleanup_output_dir(rsp_name)
+  cleanup_temp_n_output_directories(rsp_name)
 
 if __name__ == "__main__":
   main()
