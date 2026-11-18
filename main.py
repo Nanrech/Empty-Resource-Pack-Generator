@@ -142,9 +142,11 @@ def get_version_pack_info():
     "minor": pack_info["resource_minor"],
   }
 
-# TODO: Warn if rsp already exists
 def rsp_mkdir_base_directory(path: Path):
-  path.mkdir(exist_ok=True)
+  if path.exists():
+    raise RuntimeError(f"Resource pack directory already exists: {path}")
+
+  path.mkdir()
 
 def rsp_create_pack_mcmeta(path, info):
   major = info["major"]
@@ -203,9 +205,11 @@ def rsp_make_lang_files(path):
   _rsp_make_lang_en_us_keys(path, en_us)
 
 def rsp_pack_into_zip_file(path, name):
-  out_name = (PATH_OUTPUT_DIR / name).__str__() + ".zip"
+  out_name = PATH_OUTPUT_DIR / f"{name}.zip"
+  if out_name.exists():
+    raise RuntimeError(f"Resource pack ZIP already exists: {out_name}")
 
-  with zipfile.ZipFile(out_name, "w", zipfile.ZIP_STORED) as zip_ref:
+  with zipfile.ZipFile(out_name, "x", zipfile.ZIP_STORED) as zip_ref:
     for folder_name, _, filenames in os.walk(path):
       for filename in filenames:
         file_path = os.path.join(folder_name, filename)
