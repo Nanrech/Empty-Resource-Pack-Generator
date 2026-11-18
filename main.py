@@ -74,14 +74,14 @@ def download_version_package(url):
 
 def get_client_download_info():
   f = open(FILE_PACKAGE_JSON, "r")
-  package_dict: dict = json.load(f)
+  package_json = json.load(f)
   f.close()
 
-  package_downloads = package_dict.get("downloads")
-  if package_downloads is None:
-    raise RuntimeError
+  downloads = package_json.get("downloads")
+  if downloads is None:
+    raise RuntimeError("placeholder")
 
-  client_info = package_downloads["client"]
+  client_info = downloads["client"]
   return client_info.get("url"), client_info.get("sha1"), client_info.get("size")
 
 def download_client_jar_as_zip(url, expected_sha1, expected_size):
