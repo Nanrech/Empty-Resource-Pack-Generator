@@ -4,6 +4,7 @@ import zipfile
 import re
 import shutil
 import os
+import hashlib
 
 from pathlib import Path
 
@@ -81,14 +82,24 @@ def get_client_download_info():
     raise RuntimeError
 
   client_info = package_downloads["client"]
-  return {
-    "sha1": client_info["sha1"],
-    "size": client_info["size"],
-    "url":  client_info["url"]
-  }
+  return client_info.get("url"), client_info.get("sha1"), client_info.get("size")
 
-def download_client_jar_as_zip(url):
-  _download_temp_stuff(url, FILE_CLIENT_JAR)
+def download_client_jar_as_zip(url, expected_sha1, expected_size):
+  response = requests.get(url, allow_redirects=True, timeout=(10, 60))
+  # fuck it we ball
+  response.raise_for_status()
+  content = response.content
+
+  # compare size
+  if expected_size is not None and len(content) != expected_size:
+    raise RuntimeError("placeholder")
+
+  # compare hash
+  if hashlib.sha1(content).hexdigest().lower() != expected_sha1.lower():
+    raise RuntimeError("Client download SHA-1 checksum mismatch.")
+
+  with open(FILE_CLIENT_JAR, "wb") as f:
+    f.write(content)
 
 def extract_client_zip():
   with zipfile.ZipFile(FILE_CLIENT_JAR, 'r') as z:
@@ -223,10 +234,12 @@ def main():
 
   # Download version package and get target version info
   download_version_package(target_version_info["url"])
-  target_client_info = get_client_download_info()
+  target_url, target_sha1, target_size = get_client_download_info()
+  if None in [target_url, target_sha1, target_size]:
+    raise RuntimeError("placeholder")
 
   # Download client.jar as zip and extract contents
-  download_client_jar_as_zip(target_client_info["url"])
+  download_client_jar_as_zip(target_url, target_sha1, target_size)
   extract_client_zip()
 
   # Create new resourcepack dir
