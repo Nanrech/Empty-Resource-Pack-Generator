@@ -42,7 +42,7 @@ def get_latest_versions_info():
 
   latest = manifest_dict.get("latest")
   if latest is None:
-    raise RuntimeError
+    raise ValueError("latest is missing from version manifest.")
 
   latest_versions_info = {
     "release": {
@@ -57,7 +57,7 @@ def get_latest_versions_info():
 
   versions_iterable = manifest_dict.get("versions")
   if versions_iterable is None:
-    raise RuntimeError
+    raise ValueError("versions is missing from version manifest.")
 
   for v in versions_iterable:
     v_id = v.get("id")
@@ -82,9 +82,11 @@ def get_client_download_info():
 
   downloads = package_json.get("downloads")
   if downloads is None:
-    raise RuntimeError("placeholder")
+    raise ValueError("downloads is missing from version package.")
 
-  client_info = downloads["client"]
+  client_info = downloads.get("client")
+  if client_info is None:
+    raise ValueError("Client download info is missing from version package.")
   return client_info.get("url"), client_info.get("sha1"), client_info.get("size")
 
 def download_client_jar_as_zip(url, expected_sha1, expected_size):
@@ -95,11 +97,11 @@ def download_client_jar_as_zip(url, expected_sha1, expected_size):
 
   # compare size
   if expected_size is not None and len(content) != expected_size:
-    raise RuntimeError("placeholder")
+    raise ValueError(f"Client file size mismatch: expected {expected_size} bytes, received {len(content)}.")
 
   # compare hash
   if hashlib.sha1(content).hexdigest().lower() != expected_sha1.lower():
-    raise RuntimeError("Client download SHA-1 checksum mismatch.")
+    raise ValueError("Client file SHA-1 checksum mismatch.")
 
   with open(FILE_CLIENT_JAR, "wb") as f:
     f.write(content)
@@ -111,7 +113,7 @@ def extract_client_zip():
 
     for required_file in required_files:
       if required_file not in archive_files:
-        raise RuntimeError("placeholder")
+        raise zipfile.BadZipFile(f"Client JAR is missing {required_file}.")
 
     with z.open("version.json") as source:
       with open(FILE_CLIENT_VERSION, "wb") as destination:
@@ -127,14 +129,14 @@ def get_version_pack_info():
   f.close()
 
   if not isinstance(version_json, dict):
-    raise RuntimeError("Couldn't open version.json. File is malformed or missing.")
+    raise ValueError("version.json is malformed.")
 
   pack_info = version_json.get("pack_version")
-  if pack_info is None:
-    raise RuntimeError("pack_info is missing from version.json.")
+  if not isinstance(pack_info, dict):
+    raise ValueError("pack_version is missing or malformed in version.json.")
 
   if "resource_major" not in pack_info or "resource_minor" not in pack_info:
-    raise RuntimeError("pack_info is missing resource_major or resource_minor.")
+    raise ValueError("pack_version is missing resource_major or resource_minor.")
 
   # bc of the check before we can now assume these will work
   return {
@@ -144,7 +146,7 @@ def get_version_pack_info():
 
 def rsp_mkdir_base_directory(path: Path):
   if path.exists():
-    raise RuntimeError(f"Resource pack directory already exists: {path}")
+    raise FileExistsError(f"Resource pack directory already exists: {path}")
 
   path.mkdir()
 
@@ -207,7 +209,7 @@ def rsp_make_lang_files(path):
 def rsp_pack_into_zip_file(path, name):
   out_name = PATH_OUTPUT_DIR / f"{name}.zip"
   if out_name.exists():
-    raise RuntimeError(f"Resource pack ZIP already exists: {out_name}")
+    raise FileExistsError(f"Resource pack ZIP already exists: {out_name}")
 
   with zipfile.ZipFile(out_name, "x", zipfile.ZIP_STORED) as zip_ref:
     for folder_name, _, filenames in os.walk(path):
@@ -245,13 +247,18 @@ def main():
       target_version_info = latest_versions_info.get("snapshot")
 
     if target_version_info is None:
-      raise RuntimeError
+      channel = "release" if RELEASE_OR_SNAPSHOT else "snapshot"
+      raise ValueError(f"Latest {channel} info is missing from version manifest.")
 
     # Download version package and get target version info
     download_version_package(target_version_info["url"])
     target_url, target_sha1, target_size = get_client_download_info()
-    if None in [target_url, target_sha1, target_size]:
-      raise RuntimeError("placeholder")
+    if target_url is None:
+      raise ValueError("Client download URL is missing.")
+    if target_sha1 is None:
+      raise ValueError("Client file SHA-1 is missing.")
+    if target_size is None:
+      raise ValueError("Client file size is missing.")
 
     # Download client.jar as zip and extract contents
     download_client_jar_as_zip(target_url, target_sha1, target_size)
