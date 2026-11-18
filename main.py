@@ -103,19 +103,20 @@ def download_client_jar_as_zip(url, expected_sha1, expected_size):
 
 def extract_client_zip():
   with zipfile.ZipFile(FILE_CLIENT_JAR, 'r') as z:
-    z.extract("version.json", PATH_TEMP_DIR)
-    z.extract("assets/minecraft/lang/en_us.json", PATH_TEMP_DIR)
+    required_files = ["version.json", "assets/minecraft/lang/en_us.json"]
+    archive_files = z.namelist()
 
-    # We have to check if there's an en_us.json there already or it explodes
-    if os.path.exists(PATH_TEMP_DIR / "en_us.json"):
-      os.remove(PATH_TEMP_DIR / "en_us.json")
+    for required_file in required_files:
+      if required_file not in archive_files:
+        raise RuntimeError("placeholder")
 
-    # Move en_us.json to the root of the temp folder
-    en_us = PATH_TEMP_DIR / "assets" / "minecraft" / "lang" / "en_us.json"
-    shutil.move(en_us, PATH_TEMP_DIR)
+    with z.open("version.json") as source:
+      with open(FILE_CLIENT_VERSION, "wb") as destination:
+        shutil.copyfileobj(source, destination)
 
-    # Delete assets/
-    shutil.rmtree(PATH_TEMP_DIR / "assets")
+    with z.open("assets/minecraft/lang/en_us.json") as source:
+      with open(FILE_EN_US, "wb") as destination:
+        shutil.copyfileobj(source, destination)
 
 def get_version_pack_info():
   f = open(FILE_CLIENT_VERSION, "r")
